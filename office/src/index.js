@@ -9,6 +9,44 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 
+
+app.use(express.static('src/public'));
+
+// https://codesource.io/creating-a-logging-middleware-in-expressjs/
+const getActualRequestDurationInMilliseconds = start => {
+    const NS_PER_SEC = 1e9; // convert to nanoseconds
+    const NS_TO_MS = 1e6; // convert to milliseconds
+    const diff = process.hrtime(start);
+    return (diff[0] * NS_PER_SEC + diff[1]) / NS_TO_MS;
+};
+let demoLogger = (req, res, next) => {
+    let current_datetime = new Date();
+    let formatted_date =
+        current_datetime.getFullYear() +
+        "-" +
+        (current_datetime.getMonth() + 1) +
+        "-" +
+        current_datetime.getDate() +
+        " " +
+        current_datetime.getHours() +
+        ":" +
+        current_datetime.getMinutes() +
+        ":" +
+        current_datetime.getSeconds();
+    let method = req.method;
+    let url = req.url;
+    let status = res.statusCode;
+    const start = process.hrtime();
+    const durationInMilliseconds = getActualRequestDurationInMilliseconds(start);
+    let log = `[${formatted_date}] ${method}:${url} ${status} ${durationInMilliseconds.toLocaleString()} ms`;
+    console.log(log);
+    next();
+};
+
+
+app.use(demoLogger);
+
+
 const port = process.env.PORT;
 
 var AWS = require('aws-sdk');
@@ -90,7 +128,7 @@ app.get("/list", (req, res) => {
         let result = {
             /*data: data,*/
             err: err,
-            content: data ?.Contents
+            content: data ? data.Contents : null
         }
         if (err) {
             console.log("Error", err);
@@ -112,10 +150,9 @@ app.post("/tasks", (req, res) => {
     res.send(`i guess all ${msgs.length} msgs have been sent, but not sure`);
 });
 
-app.get("/", (req, res) => {
+app.get("/help", (req, res) => {
     let desc = {
-        paths: [
-            {
+        paths: [{
                 path: "/list",
                 method: "GET"
             },
@@ -128,6 +165,8 @@ app.get("/", (req, res) => {
     }
     res.send(desc);
 })
+
+
 
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
