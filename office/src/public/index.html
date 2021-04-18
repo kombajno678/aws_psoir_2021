@@ -145,6 +145,7 @@
             document.getElementById('api-form').value = apiUrl;
             document.getElementById('api-form').onblur = () => {
                 apiUrl = document.getElementById('api-form').value;
+                console.log('apiUrl : ', apiUrl);
             }
         });
 
