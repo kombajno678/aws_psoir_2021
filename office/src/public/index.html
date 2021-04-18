@@ -27,6 +27,7 @@
             onclick="reloadList()">
         refresh
     </button>
+    <input type="text" id="api-form" name="api-url">
     <div id="s3-files"
          class="files">
         <div class="file-row">
@@ -62,11 +63,12 @@
             document.getElementById('file-content').innerHTML = '...';
             xhr.onload = function () {
                 let data = JSON.parse(xhr.response);
-                console.log(data.data);
+                
                 let string = '';
                 data.data.data.forEach(char => {
                     string += String.fromCharCode(char);
                 })
+                console.log(string);
                 document.getElementById('file-content').innerHTML = string;
             }
 
@@ -140,6 +142,10 @@
 
         window.addEventListener('load', (event) => {
             reloadList();
+            document.getElementById('api-form').value = apiUrl;
+            document.getElementById('api-form').onblur = () => {
+                apiUrl = document.getElementById('api-form').value;
+            }
         });
 
 

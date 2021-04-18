@@ -1,1 +1,1 @@
-const apiUrl = 'http://localhost';
+var apiUrl = 'http://ec2-54-160-87-52.compute-1.amazonaws.com';
