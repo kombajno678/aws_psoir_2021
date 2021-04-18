@@ -144,11 +144,42 @@ app.get("/list", (req, res) => {
 
 app.post("/tasks", (req, res) => {
     let files = req.body;
+    console.log(files);
     let msgs = files.map(prepareMsgForBatch);
     sendMsgs(msgs);
 
     res.send(`i guess all ${msgs.length} msgs have been sent, but not sure`);
 });
+
+app.post("/gets3file", (req, res) => {
+    let filePath = req.body.path;
+    console.log(req.body);
+
+    // Create S3 service object
+    let s3 = new AWS.S3({
+        apiVersion: '2006-03-01'
+    });
+
+    s3.getObject({
+            Bucket: bucketName,
+            Key: filePath
+        },
+        function (error, data) {
+            if (error != null) {
+                console.error("Failed to retrieve an object: " + error);
+                res.status(400).send({err:error, data: null})
+            } else {
+                console.log("Loaded " + data.ContentLength + " bytes");
+                // do something with data.Body
+                res.status(200).send({err:null, data: data.Body})
+                
+            }
+        }
+    );
+
+
+
+})
 
 app.get("/help", (req, res) => {
     let desc = {

@@ -24,9 +24,10 @@ https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3.html
 """
 
 class SuperWorker(threading.Thread):
-    def __init__(self, taskPath):
+    def __init__(self, taskPath, message):
         threading.Thread.__init__(self)
         self.taskPath = taskPath
+        self.message = message
         
         
     def doStuff(self, strings) -> str:
@@ -65,6 +66,7 @@ class SuperWorker(threading.Thread):
             print(e)
 
         print(f"worker => work done on  {self.taskPath}")
+        self.message.delete()
         
 
 class QueueListenerThread(threading.Thread):
@@ -93,12 +95,12 @@ class QueueListenerThread(threading.Thread):
                 # Print out the body and author (if set)
                 print('henlo, this is msg, body:{0}; tasktype:{1}'.format(message.body, taskType))
                 print('spawning worker thread')
-                wokrer = SuperWorker(message.body)
+                wokrer = SuperWorker(message.body, message)
                 wokrer.start()
                 
 
                 # Let the queue know that the message is processed
-                message.delete()
+                
             time.sleep(self.delay)
             
         
