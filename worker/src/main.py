@@ -31,7 +31,18 @@ class SuperWorker(threading.Thread):
         
         
     def doStuff(self, strings) -> str:
-        msg = f'jp2gmd invaded this file and left this number: {len(strings)}'
+        randomLine = random.randint(0, len(strings))
+        randomCharactersStart = random.randint(0, len(strings[randomLine]))
+        randomCharactersEnd = random.randint(randomCharactersStart, len(strings[randomLine]))
+        
+        msg = f'''hello🎈, aws worker🛠 has been here, 
+        
+        this file had {len(strings)} lines of text
+        
+        i have choosen random line {randomLine}, and characters from {randomCharactersStart} to {randomCharactersEnd}, here they are:
+        {strings[randomLine][randomCharactersStart:randomCharactersEnd]}
+        thank you, that's all, bye ♥
+        '''
         return msg
 
         
