@@ -7,7 +7,7 @@ import threading
 import time
 import random
 import os
-
+import datetime
 REGION = "us-east-1"
 
 QUEUE_NAME = "test-queue"
@@ -36,13 +36,19 @@ class SuperWorker(threading.Thread):
         randomCharactersEnd = random.randint(randomCharactersStart, len(strings[randomLine]))
         
         msg = f'''hello🎈, aws worker🛠 has been here, 
-        
-        this file had {len(strings)} lines of text
-        
-        i have choosen random line {randomLine}, and characters from {randomCharactersStart} to {randomCharactersEnd}, here they are:
-        {strings[randomLine][randomCharactersStart:randomCharactersEnd]}
-        thank you, that's all, bye ♥
-        '''
+
+current datetime is: {datetime.datetime.now().isoformat()}
+
+random number goes here: {random.randint(420, 2137)}
+
+------------------
+
+this file had {len(strings)} lines of text
+
+i have choosen random line {randomLine}, and characters from {randomCharactersStart} to {randomCharactersEnd}, here they are:
+{strings[randomLine][randomCharactersStart:randomCharactersEnd]}
+thank you, that's all, bye, come again ♥
+'''
         return msg
 
         
