@@ -35,19 +35,17 @@ class SuperWorker(threading.Thread):
         randomCharactersStart = random.randint(0, len(strings[randomLine]))
         randomCharactersEnd = random.randint(randomCharactersStart, len(strings[randomLine]))
         
-        msg = f'''hello🎈, aws worker🛠 has been here, 
-
-current datetime is: {datetime.datetime.now().isoformat()}
-
-random number goes here: {random.randint(420, 2137)}
-
-------------------
-
-this file had {len(strings)} lines of text
-
-i have choosen random line {randomLine}, and characters from {randomCharactersStart} to {randomCharactersEnd}, here they are:
-{strings[randomLine][randomCharactersStart:randomCharactersEnd]}
-thank you, that's all, bye, come again ♥
+        msg = f'''
+<h1>hello 🎈 <h1>, <b>aws<b> worker 🛠  has been here and left this message <br/>
+current datetime is: {datetime.datetime.now().isoformat()}<br/>
+random number goes here: {random.randint(420, 2137)}<br/>
+<br/>
+<hr/>
+<br/>
+this file had {len(strings)} lines of text<br/>
+i have choosen random line {randomLine}, and characters from index {randomCharactersStart} to {randomCharactersEnd}, here they are:<br/><br/>
+{strings[randomLine][randomCharactersStart:randomCharactersEnd]}<br/><br/>
+thank you, that's all, bye, come again ♥<br/>
 '''
         return msg
 
