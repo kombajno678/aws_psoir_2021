@@ -57,6 +57,31 @@ AWS.config.update({
     region: 'us-east-1'
 });
 
+
+
+
+
+// // Initialize the Amazon Cognito credentials provider
+// AWS.config.region = 'us-east-1'; // Region
+// AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+//     IdentityPoolId: 'us-east-1:c6ac60b4-7ff6-48a6-9f73-8cdfa3dda9b0',
+// });
+
+// var cognitoidentity = new AWS.CognitoIdentity();
+// cognitoidentity.createIdentityPool(params, function (err, data) {
+//     if (err) console.log(err, err.stack); // an error occurred
+//     else console.log(data); // successful response
+// });
+
+
+
+
+
+
+
+
+
+
 function prepareMsgForBatch(fileName) {
     let attribs = {
         "TaskType": {
@@ -140,17 +165,6 @@ app.get("/list", (req, res) => {
         res.send(result);
     });
 });
-
-
-app.post("/tasks", (req, res) => {
-    let files = req.body;
-    console.log(files);
-    let msgs = files.map(prepareMsgForBatch);
-    sendMsgs(msgs);
-
-    res.send(`i guess all ${msgs.length} msgs have been sent, but not sure`);
-});
-
 app.post("/gets3file", (req, res) => {
     let filePath = req.body.path;
     console.log(req.body);
@@ -167,12 +181,18 @@ app.post("/gets3file", (req, res) => {
         function (error, data) {
             if (error != null) {
                 console.error("Failed to retrieve an object: " + error);
-                res.status(400).send({err:error, data: null})
+                res.status(400).send({
+                    err: error,
+                    data: null
+                })
             } else {
                 console.log("Loaded " + data.ContentLength + " bytes");
                 // do something with data.Body
-                res.status(200).send({err:null, data: data.Body})
-                
+                res.status(200).send({
+                    err: null,
+                    data: data.Body
+                })
+
             }
         }
     );
@@ -180,6 +200,18 @@ app.post("/gets3file", (req, res) => {
 
 
 })
+
+
+
+app.post("/tasks", (req, res) => {
+    let files = req.body;
+    console.log(files);
+    let msgs = files.map(prepareMsgForBatch);
+    sendMsgs(msgs);
+
+    res.send(`i guess all ${msgs.length} msgs have been sent, but not sure`);
+});
+
 
 app.get("/help", (req, res) => {
     let desc = {
@@ -196,7 +228,6 @@ app.get("/help", (req, res) => {
     }
     res.send(desc);
 })
-
 
 
 app.listen(port, () => {
