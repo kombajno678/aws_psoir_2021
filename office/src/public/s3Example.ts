@@ -1,3 +1,8 @@
+const BUCKET_NAME = 'test-bucket-2137';
+const IDENTITY_POOL_ID = 'us-east-1:c6ac60b4-7ff6-48a6-9f73-8cdfa3dda9b0';
+const REGION = "us-east-1"; //REGION
+
+
 // Load the required clients and packages
 const { CognitoIdentityClient } = require("@aws-sdk/client-cognito-identity");
 const {
@@ -5,24 +10,24 @@ const {
 } = require("@aws-sdk/credential-provider-cognito-identity");
 const { S3Client, PutObjectCommand, ListObjectsCommand, DeleteObjectCommand, DeleteObjectsCommand } = require("@aws-sdk/client-s3");
 
-// Set the AWS Region
-const REGION = "us-east-1"; //REGION
+
 
 // Initialize the Amazon Cognito credentials provider
 const s3 = new S3Client({
   region: REGION,
   credentials: fromCognitoIdentityPool({
     client: new CognitoIdentityClient({ region: REGION }),
-    identityPoolId: "us-east-1:c6ac60b4-7ff6-48a6-9f73-8cdfa3dda9b0", // IDENTITY_POOL_ID
+    identityPoolId: IDENTITY_POOL_ID, // IDENTITY_POOL_ID
   }),
 });
 
-const albumBucketName = "test-bucket-2137"; //BUCKET_NAME
+const albumBucketName = BUCKET_NAME; //BUCKET_NAME
 // snippet-end:[s3.JavaScript.photoAlbumExample.configV3]
 // snippet-start:[s3.JavaScript.photoAlbumExample.listAlbumsV3]
 
 // A utility function to create HTML
 function getHtml(template) {
+  console.log('getHtml');
   return template.join("\n");
 }
 // Make getHTML function available to the browser
@@ -30,6 +35,7 @@ window.getHTML = getHtml;
 
 // List the photo albums that exist in the bucket
 const listAlbums = async () => {
+  console.log('listAlbums');
   try {
     const data = await s3.send(
         new ListObjectsCommand({ Delimiter: "/", Bucket: albumBucketName })
@@ -42,7 +48,7 @@ const listAlbums = async () => {
         "Create new album",
         "</button>",
       ];
-      document.getElementById("app").innerHTML = htmlTemplate;
+      document.getElementById("app").innerHTML = htmlTemplate.join('');
     } else {
       var albums = data.CommonPrefixes.map(function (commonPrefix) {
         var prefix = commonPrefix.Prefix;
@@ -87,7 +93,9 @@ window.listAlbums = listAlbums;
 
 // Create an album in the bucket
 const createAlbum = async (albumName) => {
+  console.log('createAlbum');
   albumName = albumName.trim();
+
   if (!albumName) {
     return alert("Album names must contain at least one non-space character.");
   }
@@ -115,6 +123,7 @@ window.createAlbum = createAlbum;
 // View the contents of an album
 
 const viewAlbum = async (albumName) => {
+  console.log('viewAlbum');
   const albumPhotosKey = encodeURIComponent(albumName) + "/";
   try {
     const data = await s3.send(
@@ -197,6 +206,7 @@ window.viewAlbum = viewAlbum;
 
 // Add a photo to an album
 const addPhoto = async (albumName) => {
+  console.log('addPhoto');
   const files = document.getElementById("photoupload").files;
   try {
     const albumPhotosKey = encodeURIComponent(albumName) + "/";
@@ -235,6 +245,7 @@ window.addPhoto = addPhoto;
 
 // Delete a photo from an album
 const deletePhoto = async (albumName, photoKey) => {
+  console.log('deletePhoto');
   try {
     console.log(photoKey);
     const params = { Key: photoKey, Bucket: albumBucketName };
@@ -253,6 +264,7 @@ window.deletePhoto = deletePhoto;
 
 // Delete an album from the bucket
 const deleteAlbum = async (albumName) => {
+  console.log('deleteAlbum');
   const albumKey = encodeURIComponent(albumName) + "/";
   try {
     const params = { Bucket: albumBucketName, Prefix: albumKey };
