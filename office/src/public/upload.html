@@ -8,12 +8,25 @@
             return template.join("\n");
         }
         viewFolder(null);
+
+
+
     </script>
 </head>
 
 <body>
     <h1>S3 files</h1>
+    api url:
+    <input type="text"
+           id="api-form"
+           name="api-url">
+    <button id="api-url-default">default</button>
     <div id="app"></div>
+    <div id="log"
+         class="log"></div>
+
+    <div id="file-content"
+         class="file-content"></div>
 </body>
 
 </html>

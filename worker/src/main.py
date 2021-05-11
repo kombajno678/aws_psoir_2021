@@ -81,7 +81,7 @@ thank you, that's all, bye, come again ♥<br/>
             print(e)
 
         print(f"worker => work done on  {self.taskPath}")
-        self.message.delete()
+        # self.message.delete()
         
 
 class QueueListenerThread(threading.Thread):
@@ -113,8 +113,8 @@ class QueueListenerThread(threading.Thread):
                 wokrer = SuperWorker(message.body, message)
                 wokrer.start()
                 
-
                 # Let the queue know that the message is processed
+                message.delete()
                 
             time.sleep(self.delay)
             

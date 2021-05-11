@@ -6,6 +6,61 @@ const DONE_FOLDER_NAME = 'done';
 const ALLOWED_FOLDERS = [TODO_FOLDER_NAME, DONE_FOLDER_NAME]
 const ALLOWED_UPLOAD_FOLDERS = [TODO_FOLDER_NAME]
 
+const defaultApiUrl = 'http://ec2-54-160-87-52.compute-1.amazonaws.com'
+var apiUrl = defaultApiUrl;
+
+
+const gets3file = (path) => {
+  console.log('gets3file');
+  
+  let xhr = new XMLHttpRequest();
+  xhr.open('POST', apiUrl + '/gets3file');
+  xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+  xhr.send(JSON.stringify({
+    path: path
+  }));
+  document.getElementById('file-content').innerHTML = '...';
+  xhr.onload = function () {
+    let data = JSON.parse(xhr.response);
+
+    let string = '';
+    data.data.data.forEach(char => {
+      string += String.fromCharCode(char);
+    })
+    console.log(string);
+    document.getElementById('file-content').innerHTML = string;
+  }
+
+}
+window.gets3file = gets3file;
+
+const doWorkOnselectedFiles = () => {
+  let allCheckboxes = document.querySelectorAll(".file-checkbox");
+  let files = [];
+
+  allCheckboxes.forEach(c => {
+    if (c['checked']) {
+      files.push(c['value']);
+    }
+  })
+  //console.log(files);
+
+  let xhr = new XMLHttpRequest();
+  xhr.open('POST', apiUrl + '/tasks');
+  xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+  xhr.send(JSON.stringify(files));
+  xhr.onload = function () {
+    let msg = `tasks sent: ${JSON.stringify(files)}`;
+    document.getElementById('log').innerHTML = msg + '<br>' + document.getElementById('log').innerHTML
+  }
+
+
+
+}
+window.doWorkOnselectedFiles = doWorkOnselectedFiles;
+
+
+
 // Load the required clients and packages
 import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity";
 
@@ -13,6 +68,27 @@ import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-id
 
 import { S3Client, PutObjectCommand, ListObjectsCommand, DeleteObjectCommand, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 
+window.addEventListener('load', (event) => {
+
+  let stored = localStorage.getItem('aws-office-api-url');
+  if (stored) {
+    apiUrl = stored;
+  }
+
+  document.getElementById('api-form')['value'] = apiUrl;
+
+  document.getElementById('api-form').onkeyup = () => {
+    apiUrl = document.getElementById('api-form')['value'];
+    localStorage.setItem('aws-office-api-url', apiUrl);
+    console.log('apiUrl updated, ', apiUrl);
+  }
+
+  document.getElementById('api-url-default').onclick = () => {
+    apiUrl = defaultApiUrl;
+    localStorage.setItem('aws-office-api-url', apiUrl);
+    document.getElementById('api-form')['value'] = apiUrl;
+  }
+});
 
 
 // Initialize the Amazon Cognito credentials provider
@@ -27,8 +103,7 @@ const s3 = new S3Client({
 const bucketName = BUCKET_NAME; //BUCKET_NAME
 
 // A utility function to create HTML
-function getHtml(template) {
-  console.log('getHtml');
+const getHtml = (template) => {
   return template.join("");
 }
 // Make getHTML function available to the browser
@@ -90,25 +165,26 @@ const viewFolder = async (folderName) => {
     console.error(`folder ${folderName} is not allowed`);
     throw `folder ${folderName} is not allowed`;
   }
-  const fodlerKey = encodeURIComponent(folderName) + "/";
+  const folderKey = encodeURIComponent(folderName) + "/";
   try {
     let addFileForm =
-      `<input id="input-file-upload" type="file" accept=".txt">'
-      <button id="addfile" onclick="addFile('${folderName}')">"
+      `<input id="input-file-upload" type="file" accept=".txt">
+      <button id="addfile" onclick="addFile('${folderName}')">
       Add file
       </button>`;
     let allowedUpload = ALLOWED_UPLOAD_FOLDERS.find(f => f === folderName) ? true : false;
     const data = await s3.send(
       new ListObjectsCommand({
-        Prefix: fodlerKey,
+        Prefix: folderKey,
         Bucket: bucketName,
       })
     );
+
     if (data.Contents.length === 1) {
       var htmlTemplate = [
         "<p>No files :( </p>",
         allowedUpload ? addFileForm : [],
-        '<button onclick="listFolders()">',
+        '<br><button onclick="listFolders()">',
         "Back to folders",
         "</button>",
       ];
@@ -117,10 +193,9 @@ const viewFolder = async (folderName) => {
       console.log(data);
       const href = "https://s3." + REGION + ".amazonaws.com/";
       const bucketUrl = href + bucketName + "/";
-      const photos = data.Contents.filter(x => x.Key !== folderName + '/').map(function (photo) {
-        const photoKey = photo.Key;
-        console.log(photo.Key);
-        const photoUrl = bucketUrl + encodeURIComponent(photoKey);
+      const files = data.Contents.filter(x => x.Key !== folderName + '/').map(function (file) {
+        const fileKey = file.Key;
+        const fileUrl = bucketUrl + encodeURIComponent(fileKey);
         return getHtml([
           "<span>",
           // "<div>",
@@ -130,19 +205,20 @@ const viewFolder = async (folderName) => {
           "<span onclick=\"deletePhoto('" +
           folderName +
           "','" +
-          photoKey +
+          fileKey +
           "')\">",
           "X",
           "</span>",
-          '<span><a href="' + photoUrl + '">',
-          photoKey.replace(fodlerKey, ""),
+          `<input type="checkbox" class="file-checkbox" id="checkbox_${fileKey}" value="${fileKey}" >`,
+          `<span><a href="#" onclick="gets3file('${fileKey}')">`,
+          fileKey.replace(folderKey, ""),
           "</a></span>",
           "</div>",
           "</span>",
         ]);
       });
-      var message = photos.length
-        ? "<p>Click the X to delete file.</p>"
+      var message = files.length
+        ? `<button type="button" onclick="doWorkOnselectedFiles()"> do "work" on selected files </button>`
         : "<p>You don't have any files. You need to add files.</p>";
       const htmlTemplate = [
         // "<h2>",
@@ -150,15 +226,14 @@ const viewFolder = async (folderName) => {
         // "</h2>",
         message,
         "<div>",
-        getHtml(photos),
+        getHtml(files),
         "</div>",
         allowedUpload ? addFileForm : [],
-        '<button onclick="listFolders()">',
+        '<br><button onclick="listFolders()">',
         "Back to folders",
         "</button>",
       ];
       document.getElementById("app").innerHTML = getHtml(htmlTemplate);
-      //document.getElementsByTagName("img")[0].remove();
     }
   } catch (err) {
     return alert("There was an error viewing your album: " + err.message);
@@ -217,4 +292,7 @@ const deleteFile = async (folderName, fileKey) => {
 };
 // Make deletePhoto function available to the browser
 window.deleteFile = deleteFile;
+
+
+
 

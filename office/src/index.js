@@ -8,8 +8,6 @@ app.use(bodyParser.urlencoded({
     extended: false
 }));
 app.use(bodyParser.json());
-
-
 app.use(express.static('src/public'));
 
 // https://codesource.io/creating-a-logging-middleware-in-expressjs/
@@ -53,32 +51,63 @@ var AWS = require('aws-sdk');
 const testQueueUrl = process.env.QUEUE_URL;
 const bucketName = process.env.BUCKET_NAME;
 
+const ququeName = testQueueUrl.split('/')[testQueueUrl.split('/').length - 1];
+
 AWS.config.update({
     region: 'us-east-1'
 });
 
 
 
+function setup() {
+    console.log('setup');
+    let sqs = new AWS.SQS({
+        apiVersion: '2012-11-05'
+    });
 
+    let params = {};
 
-// // Initialize the Amazon Cognito credentials provider
-// AWS.config.region = 'us-east-1'; // Region
-// AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-//     IdentityPoolId: 'us-east-1:c6ac60b4-7ff6-48a6-9f73-8cdfa3dda9b0',
-// });
+    sqs.listQueues(params, function (err, data) {
+        if (err) {
+            console.log("Error", err);
+        } else {
+            //console.log("Success", data.QueueUrls);
+            //console.log(data);
 
-// var cognitoidentity = new AWS.CognitoIdentity();
-// cognitoidentity.createIdentityPool(params, function (err, data) {
-//     if (err) console.log(err, err.stack); // an error occurred
-//     else console.log(data); // successful response
-// });
+            let needToCreateQueue = false;
+            if (!data.QueueUrls) {
+                needToCreateQueue = true;
+            } else {
+                // find ququeName
+                if (!data.QueueUrls.find(url => url === testQueueUrl)) {
+                    needToCreateQueue = true;
+                }
+            }
+            if (needToCreateQueue) {
+                console.log('creating queue ...');
+                let params = {
+                    QueueName: ququeName,
+                    Attributes: {
+                        'DelaySeconds': '60',
+                        'MessageRetentionPeriod': '86400'
+                    }
+                };
 
+                sqs.createQueue(params, function (err, data) {
+                    if (err) {
+                        console.log("Error while crateing queue ", err);
+                    } else {
+                        console.log("Success, created queue ", data.QueueUrl);
+                        testQueueUrl = data.QueueUrl;
+                    }
+                });
 
-
-
-
-
-
+            } else {
+                console.log('queue already exists');
+            }
+        }
+    });
+}
 
 
 
@@ -135,67 +164,75 @@ function sendMsgs(manyParams) {
 }
 
 
-
 app.get("/list", (req, res) => {
+    try {
+        // Create S3 service object
+        let s3 = new AWS.S3({
+            apiVersion: '2006-03-01'
+        });
 
-    // Create S3 service object
-    let s3 = new AWS.S3({
-        apiVersion: '2006-03-01'
-    });
+        // Create the parameters for calling listObjects
+        let bucketParams = {
+            Bucket: bucketName,
+        };
 
-    // Create the parameters for calling listObjects
-    let bucketParams = {
-        Bucket: bucketName,
-    };
+        // Call S3 to obtain a list of the objects in the bucket
+        s3.listObjects(bucketParams, function (err, data) {
+            let result = {
+                /*data: data,*/
+                err: err,
+                content: data ? data.Contents : null
+            }
+            if (err) {
+                console.log("Error", err);
+                res.status(err.statusCode);
+            } else {
+                //console.log("Success", data);
+                res.status(200);
+            }
+            res.send(result);
+        });
+    } catch {
+        res.status(500).send({});
+    }
 
-    // Call S3 to obtain a list of the objects in the bucket
-    s3.listObjects(bucketParams, function (err, data) {
-        let result = {
-            /*data: data,*/
-            err: err,
-            content: data ? data.Contents : null
-        }
-        if (err) {
-            console.log("Error", err);
-            res.status(err.statusCode);
-        } else {
-            //console.log("Success", data);
-            res.status(200);
-        }
-        res.send(result);
-    });
 });
 app.post("/gets3file", (req, res) => {
-    let filePath = req.body.path;
-    console.log(req.body);
+    try {
+        let filePath = req.body.path;
+        console.log(req.body);
 
-    // Create S3 service object
-    let s3 = new AWS.S3({
-        apiVersion: '2006-03-01'
-    });
+        // Create S3 service object
+        let s3 = new AWS.S3({
+            apiVersion: '2006-03-01'
+        });
 
-    s3.getObject({
-            Bucket: bucketName,
-            Key: filePath
-        },
-        function (error, data) {
-            if (error != null) {
-                console.error("Failed to retrieve an object: " + error);
-                res.status(400).send({
-                    err: error,
-                    data: null
-                })
-            } else {
-                console.log("Loaded " + data.ContentLength + " bytes");
-                // do something with data.Body
-                res.status(200).send({
-                    err: null,
-                    data: data.Body
-                })
+        s3.getObject({
+                Bucket: bucketName,
+                Key: filePath
+            },
+            function (error, data) {
+                if (error != null) {
+                    console.error("Failed to retrieve an object: " + error);
+                    res.status(400).send({
+                        err: error,
+                        data: null
+                    })
+                } else {
+                    console.log("Loaded " + data.ContentLength + " bytes");
+                    // do something with data.Body
+                    res.status(200).send({
+                        err: null,
+                        data: data.Body
+                    })
 
+                }
             }
-        }
-    );
+        );
+    } catch {
+        res.status(500).send({});
+    }
+
 
 
 
@@ -204,12 +241,17 @@ app.post("/gets3file", (req, res) => {
 
 
 app.post("/tasks", (req, res) => {
-    let files = req.body;
-    console.log(files);
-    let msgs = files.map(prepareMsgForBatch);
-    sendMsgs(msgs);
+    try {
+        let files = req.body;
+        console.log(files);
+        let msgs = files.map(prepareMsgForBatch);
+        sendMsgs(msgs);
 
-    res.send(`i guess all ${msgs.length} msgs have been sent, but not sure`);
+        res.send(`i guess all ${msgs.length} msgs have been sent, but not sure`);
+    } catch {
+        res.status(500).send({});
+    }
+
 });
 
 
@@ -230,6 +272,8 @@ app.get("/help", (req, res) => {
 })
 
 
+
 app.listen(port, () => {
+    setup();
     console.log(`Example app listening at http://localhost:${port}`);
 });

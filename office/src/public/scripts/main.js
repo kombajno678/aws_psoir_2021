@@ -1,22 +1,5 @@
 var apiUrl = 'http://ec2-54-160-87-52.compute-1.amazonaws.com';
 
-// const idPoolId = 'us-east-1:c6ac60b4-7ff6-48a6-9f73-8cdfa3dda9b0';
-
-
-// requirejs(["helper/util"], function(util) {
-//     //This function is called when scripts/helper/util.js is loaded.
-//     //If util.js calls define(), then this function is not fired until
-//     //util's dependencies have loaded, and the util argument will hold
-//     //the module value for "helper/util".
-// });
-
-
-// var AWS = require('aws-sdk');
-
-// AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-//     IdentityPoolId: idPoolId,
-// });
-
 
 
 function gets3file(path) {
@@ -96,22 +79,6 @@ function reloadList() {
             })
         }
 
-
-
-
-
     };
 
-
-
-
 }
-
-window.addEventListener('load', (event) => {
-    reloadList();
-    document.getElementById('api-form').value = apiUrl;
-    document.getElementById('api-form').onblur = () => {
-        apiUrl = document.getElementById('api-form').value;
-        console.log('apiUrl : ', apiUrl);
-    }
-});
