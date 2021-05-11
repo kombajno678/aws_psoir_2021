@@ -1,7 +1,10 @@
 const BUCKET_NAME = 'test-bucket-2137';
 const IDENTITY_POOL_ID = 'us-east-1:c6ac60b4-7ff6-48a6-9f73-8cdfa3dda9b0';
 const REGION = "us-east-1"; //REGION
-
+const TODO_FOLDER_NAME = 'todo';
+const DONE_FOLDER_NAME = 'done';
+const ALLOWED_FOLDERS = [TODO_FOLDER_NAME, DONE_FOLDER_NAME]
+const ALLOWED_UPLOAD_FOLDERS = [TODO_FOLDER_NAME]
 
 // Load the required clients and packages
 const { CognitoIdentityClient } = require("@aws-sdk/client-cognito-identity");
@@ -28,7 +31,7 @@ const albumBucketName = BUCKET_NAME; //BUCKET_NAME
 // A utility function to create HTML
 function getHtml(template) {
   console.log('getHtml');
-  return template.join("\n");
+  return template.join("");
 }
 // Make getHTML function available to the browser
 window.getHTML = getHtml;
@@ -55,7 +58,7 @@ const listAlbums = async () => {
         var albumName = decodeURIComponent(prefix.replace("/", ""));
         return getHtml([
           "<li>",
-          "<span onclick=\"deleteAlbum('" + albumName + "')\">X</span>",
+          //"<span onclick=\"deleteAlbum('" + albumName + "')\">X</span>",
           "<span onclick=\"viewAlbum('" + albumName + "')\">",
           albumName,
           "</span>",
@@ -64,19 +67,19 @@ const listAlbums = async () => {
       });
       var message = albums.length
           ? getHtml([
-            "<p>Click an album name to view it.</p>",
-            "<p>Click the X to delete the album.</p>",
+            "<p>Click folder name to view it.</p>",
+            //"<p>Click the X to delete the album.</p>",
           ])
-          : "<p>You do not have any albums. You need to create an album.";
+          : "<p>You do not have any folders. You need to create a folder.";
       const htmlTemplate = [
-        "<h2>Albums</h2>",
+        "<h2>Folders</h2>",
         message,
         "<ul>",
         getHtml(albums),
         "</ul>",
-        "<button onclick=\"createAlbum(prompt('Enter Album Name:'))\">",
-        "Create new Album",
-        "</button>",
+        // "<button onclick=\"createAlbum(prompt('Enter Album Name:'))\">",
+        // "Create new Album",
+        // "</button>",
       ];
       document.getElementById("app").innerHTML = getHtml(htmlTemplate);
     }
@@ -123,9 +126,19 @@ window.createAlbum = createAlbum;
 // View the contents of an album
 
 const viewAlbum = async (albumName) => {
-  console.log('viewAlbum');
+  if(!ALLOWED_FOLDERS.find(s => s === albumName)){
+    console.error(`folder ${albumName} is not allowed`);
+    throw `folder ${albumName} is not allowed`;
+  }
+  console.log('viewAlbum : albumName=', albumName);
   const albumPhotosKey = encodeURIComponent(albumName) + "/";
   try {
+    let addFileForm = 
+      `<input id="photoupload" type="file" accept=".txt">'
+      <button id="addphoto" onclick="addPhoto('${albumName}')">"
+      Add file
+      </button>`;
+    let allowedUpload = ALLOWED_UPLOAD_FOLDERS.find(f => f === albumName) ? true : false;
     const data = await s3.send(
         new ListObjectsCommand({
           Prefix: albumPhotosKey,
@@ -134,13 +147,10 @@ const viewAlbum = async (albumName) => {
     );
     if (data.Contents.length === 1) {
       var htmlTemplate = [
-        "<p>You don't have any photos in this album. You need to add photos.</p>",
-        '<input id="photoupload" type="file" accept="image/*">',
-        '<button id="addphoto" onclick="addPhoto(\'' + albumName + "')\">",
-        "Add photo",
-        "</button>",
+        "<p>No files :( </p>",
+        allowedUpload ? addFileForm: [],
         '<button onclick="listAlbums()">',
-        "Back to albums",
+        "Back to folders",
         "</button>",
       ];
       document.getElementById("app").innerHTML = getHtml(htmlTemplate);
@@ -148,51 +158,48 @@ const viewAlbum = async (albumName) => {
       console.log(data);
       const href = "https://s3." + REGION + ".amazonaws.com/";
       const bucketUrl = href + albumBucketName + "/";
-      const photos = data.Contents.map(function (photo) {
+      const photos = data.Contents.filter(x => x.Key !== albumName+'/').map(function (photo) {
         const photoKey = photo.Key;
         console.log(photo.Key);
         const photoUrl = bucketUrl + encodeURIComponent(photoKey);
         return getHtml([
           "<span>",
-          "<div>",
-          '<img style="width:128px;height:128px;" src="' + photoUrl + '"/>',
-          "</div>",
-          "<div>",
-          "<span onclick=\"deletePhoto('" +
-          albumName +
-          "','" +
-          photoKey +
-          "')\">",
-          "X",
-          "</span>",
-          "<span>",
-          photoKey.replace(albumPhotosKey, ""),
-          "</span>",
-          "</div>",
+            // "<div>",
+            //   '<img style="width:128px;height:128px;" src="' + photoUrl + '"/>',
+            // "</div>",
+            "<div>",
+              "<span onclick=\"deletePhoto('" +
+                albumName +
+                "','" +
+                photoKey +
+                "')\">",
+                "X",
+              "</span>",
+              '<span><a href="' + photoUrl + '">',
+                photoKey.replace(albumPhotosKey, ""),
+              "</a></span>",
+            "</div>",
           "</span>",
         ]);
       });
       var message = photos.length
-          ? "<p>Click the X to delete the photo.</p>"
-          : "<p>You don't have any photos in this album. You need to add photos.</p>";
+          ? "<p>Click the X to delete file.</p>"
+          : "<p>You don't have any files. You need to add files.</p>";
       const htmlTemplate = [
-        "<h2>",
-        "Album: " + albumName,
-        "</h2>",
+        // "<h2>",
+        // "Folder: " + albumName,
+        // "</h2>",
         message,
         "<div>",
         getHtml(photos),
         "</div>",
-        '<input id="photoupload" type="file" accept="image/*">',
-        '<button id="addphoto" onclick="addPhoto(\'' + albumName + "')\">",
-        "Add photo",
-        "</button>",
+        allowedUpload ? addFileForm : [],
         '<button onclick="listAlbums()">',
-        "Back to albums",
+        "Back to folders",
         "</button>",
       ];
       document.getElementById("app").innerHTML = getHtml(htmlTemplate);
-      document.getElementsByTagName("img")[0].remove();
+      //document.getElementsByTagName("img")[0].remove();
     }
   } catch (err) {
     return alert("There was an error viewing your album: " + err.message);
