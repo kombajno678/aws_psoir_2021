@@ -48,8 +48,8 @@ app.use(demoLogger);
 const port = process.env.PORT;
 
 var AWS = require('aws-sdk');
-const testQueueUrl = process.env.QUEUE_URL;
-const bucketName = process.env.BUCKET_NAME;
+var testQueueUrl = process.env.QUEUE_URL;
+var bucketName = process.env.BUCKET_NAME;
 
 const ququeName = testQueueUrl.split('/')[testQueueUrl.split('/').length - 1];
 

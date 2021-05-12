@@ -7,7 +7,8 @@
         function getHtml(template) {
             return template.join("\n");
         }
-        viewFolder(null);
+        viewFolder('todo');
+        viewFolder('done');
 
 
 
@@ -21,7 +22,12 @@
            id="api-form"
            name="api-url">
     <button id="api-url-default">default</button>
-    <div id="app"></div>
+
+
+    <div id="app-todo"></div>
+    <div id="app-done"></div>
+
+
     <div id="log"
          class="log"></div>
 

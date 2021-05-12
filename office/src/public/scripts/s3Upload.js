@@ -61117,6 +61117,8 @@ const ALLOWED_UPLOAD_FOLDERS = [TODO_FOLDER_NAME]
 const defaultApiUrl = 'http://ec2-54-160-87-52.compute-1.amazonaws.com'
 var apiUrl = defaultApiUrl;
 
+const todoElementId = 'app-todo';
+const doneElementId = 'app-done';
 
 const gets3file = (path) => {
   console.log('gets3file');
@@ -61228,7 +61230,7 @@ const listFolders = async () => {
       const htmlTemplate = [
         "<p>no folders</p>",
       ];
-      document.getElementById("app").innerHTML = htmlTemplate.join('');
+      document.getElementById(todoElementId).innerHTML = htmlTemplate.join('');
     } else {
       var folders = data.CommonPrefixes.map(function (commonPrefix) {
         var prefix = commonPrefix.Prefix;
@@ -61253,7 +61255,7 @@ const listFolders = async () => {
         getHtml(folders),
         "</ul>"
       ];
-      document.getElementById("app").innerHTML = getHtml(htmlTemplate);
+      document.getElementById(todoElementId).innerHTML = getHtml(htmlTemplate);
     }
   } catch (err) {
     return alert("There was an error listing folders: " + err.message);
@@ -61296,7 +61298,7 @@ const viewFolder = async (folderName) => {
         "Back to folders",
         "</button>",
       ];
-      document.getElementById("app").innerHTML = getHtml(htmlTemplate);
+      document.getElementById(todoElementId).innerHTML = getHtml(htmlTemplate);
     } else {
       console.log(data);
       const href = "https://s3." + REGION + ".amazonaws.com/";
@@ -61341,7 +61343,7 @@ const viewFolder = async (folderName) => {
         "Back to folders",
         "</button>",
       ];
-      document.getElementById("app").innerHTML = getHtml(htmlTemplate);
+      document.getElementById(todoElementId).innerHTML = getHtml(htmlTemplate);
     }
   } catch (err) {
     return alert("There was an error viewing your album: " + err.message);

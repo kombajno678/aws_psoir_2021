@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "prestart": "webpack src/public/s3Example.ts --mode development --target web --devtool false -o src/public/scripts/s3Upload.js",
     "start": "node src/index.js",
+    "teardown": "node src/teardown.js",
     "dev": "nodemon src/index.js"
   },
   "author": "",
