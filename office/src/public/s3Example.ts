@@ -1,3 +1,4 @@
+
 const BUCKET_NAME = 'test-bucket-2137';
 const IDENTITY_POOL_ID = 'us-east-1:c6ac60b4-7ff6-48a6-9f73-8cdfa3dda9b0';
 const REGION = "us-east-1"; //REGION
@@ -5,6 +6,8 @@ const TODO_FOLDER_NAME = 'todo';
 const DONE_FOLDER_NAME = 'done';
 const ALLOWED_FOLDERS = [TODO_FOLDER_NAME, DONE_FOLDER_NAME]
 const ALLOWED_UPLOAD_FOLDERS = [TODO_FOLDER_NAME]
+const ALLOWED_UPLOAD_TYPE = "text/plain";
+const ALLOWED_UPLOAD_EXTENSION = ".txt";
 
 const defaultApiUrl = 'http://ec2-54-160-87-52.compute-1.amazonaws.com'
 var apiUrl = defaultApiUrl;
@@ -90,6 +93,11 @@ window.addEventListener('load', (event) => {
     localStorage.setItem('aws-office-api-url', apiUrl);
     document.getElementById('api-form')['value'] = apiUrl;
   }
+  document.getElementById('api-url-clear').onclick = () => {
+    apiUrl = '';
+    localStorage.setItem('aws-office-api-url', apiUrl);
+    document.getElementById('api-form')['value'] = apiUrl;
+  }
 });
 
 
@@ -110,53 +118,6 @@ const getHtml = (template) => {
 }
 // Make getHTML function available to the browser
 window.getHTML = getHtml;
-
-// List the photo albums that exist in the bucket
-const listFolders = async () => {
-  try {
-    const data = await s3.send(
-      new ListObjectsCommand({ Delimiter: "/", Bucket: bucketName })
-    );
-
-    if (data.CommonPrefixes === undefined) {
-      const htmlTemplate = [
-        "<p>no folders</p>",
-      ];
-      document.getElementById(todoElementId).innerHTML = htmlTemplate.join('');
-    } else {
-      var folders = data.CommonPrefixes.map(function (commonPrefix) {
-        var prefix = commonPrefix.Prefix;
-        var albumName = decodeURIComponent(prefix.replace("/", ""));
-        return getHtml([
-          "<li>",
-          "<span onclick=\"viewFolder('" + albumName + "')\">",
-          albumName,
-          "</span>",
-          "</li>",
-        ]);
-      });
-      var message = folders.length
-        ? getHtml([
-          "<p>Click folder name to view it.</p>",
-        ])
-        : "<p>You do not have any folders. You need to create a folder.";
-      const htmlTemplate = [
-        "<h2>Folders</h2>",
-        message,
-        "<ul>",
-        getHtml(folders),
-        "</ul>"
-      ];
-      document.getElementById(todoElementId).innerHTML = getHtml(htmlTemplate);
-    }
-  } catch (err) {
-    return alert("There was an error listing folders: " + err.message);
-  }
-};
-
-// Make listFolders function available to the browser
-window.listFolders = listFolders;
-
 
 
 const viewFolder = async (folderName) => {
@@ -187,11 +148,11 @@ const viewFolder = async (folderName) => {
       var htmlTemplate = [
         "<p>No files :( </p>",
         allowedUpload ? addFileForm : [],
-        '<br><button onclick="listFolders()">',
-        "Back to folders",
-        "</button>",
+        // '<br><button onclick="listFolders()">',
+        // "Back to folders",
+        // "</button>",
       ];
-      document.getElementById(todoElementId).innerHTML = getHtml(htmlTemplate);
+      document.getElementById(elementId).innerHTML = getHtml(htmlTemplate);
     } else {
       console.log(data);
       const href = "https://s3." + REGION + ".amazonaws.com/";
@@ -232,11 +193,11 @@ const viewFolder = async (folderName) => {
         getHtml(files),
         "</div>",
         allowedUpload ? addFileForm : [],
-        '<br><button onclick="listFolders()">',
-        "Back to folders",
-        "</button>",
+        // '<br><button onclick="listFolders()">',
+        // "Back to folders",
+        // "</button>",
       ];
-      document.getElementById(todoElementId).innerHTML = getHtml(htmlTemplate);
+      document.getElementById(elementId).innerHTML = getHtml(htmlTemplate);
     }
   } catch (err) {
     return alert("There was an error viewing your album: " + err.message);
@@ -248,21 +209,34 @@ window.viewFolder = viewFolder;
 
 // Add a photo to an album
 const addFile = async (folderName) => {
-  const files = document.getElementById("input-file-upload").files;
+  if(!folderName){
+    folderName = TODO_FOLDER_NAME;
+  }
+  const files = document.getElementById("input-file-upload")['files'];
   try {
     const folderKey = encodeURIComponent(folderName) + "/";
-    const data = await s3.send(
-      new ListObjectsCommand({
-        Prefix: folderKey,
-        Bucket: bucketName
-      })
-    );
+    // const data = await s3.send(
+    //   new ListObjectsCommand({
+    //     Prefix: folderKey,
+    //     Bucket: bucketName
+    //   })
+    // );
     const file = files[0];
+    let extension = file.name.split('.').pop()
+    if(!(file.type === ALLOWED_UPLOAD_TYPE)){
+      alert(`Not allowed file type.`);
+      throw `file type must be ${ALLOWED_UPLOAD_TYPE}`;
+    }
+    if(!(extension !== ALLOWED_UPLOAD_EXTENSION)){
+      alert(`Not allowed file extension`);
+      throw `file extension must be ${ALLOWED_UPLOAD_EXTENSION}`;
+    }
+    
     const fileName = file.name;
-    const photoKey = folderKey + fileName;
+    const fileKey = folderKey + fileName;
     const uploadParams = {
       Bucket: bucketName,
-      Key: photoKey,
+      Key: fileKey,
       Body: file
     };
     try {
@@ -270,7 +244,8 @@ const addFile = async (folderName) => {
       alert("Successfully uploaded photo.");
       viewFolder(folderName);
     } catch (err) {
-      return alert("There was an error uploading your photo: ", err.message);
+      console.error(err.message);
+      return alert("There was an error uploading your file: " + err.message);
     }
   } catch (err) {
     if (!files.length) {

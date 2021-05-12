@@ -13,26 +13,67 @@
 
 
     </script>
+    <script src="bootstrap-5.0.0-dist/js/bootstrap.bundle.min.js">
+    </script>
+    <link rel="stylesheet"
+          type="text/css"
+          href="bootstrap-5.0.0-dist/css/bootstrap.min.css">
 </head>
 
-<body>
-    <h1>S3 files</h1>
-    api url:
-    <input type="text"
-           id="api-form"
-           name="api-url">
-    <button id="api-url-default">default</button>
+<body class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1>S3 files</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            api url:
+            <input type="text"
+                   id="api-form"
+                   name="api-url">
+            <button class="btn btn-primary"
+                    id="api-url-default">default</button>
+            <button class="btn btn-secondary"
+                    id="api-url-clear">clear</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <input id="input-file-upload"
+                   type="file"
+                   accept=".txt">
+            <button id="addfile"
+                    onclick="addFile(null)">
+                Upload file
+            </button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>Todo</h2>
+            <div id="app-todo">
+                ... loading ...
+            </div>
+        </div>
+        <div class="col">
+            <h2>Done</h2>
+            <div id="app-done">
+                ... loading ...
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div id="log"
+                 class="log"></div>
+
+            <div id="file-content"
+                 class="file-content"></div>
+        </div>
+    </div>
 
 
-    <div id="app-todo"></div>
-    <div id="app-done"></div>
-
-
-    <div id="log"
-         class="log"></div>
-
-    <div id="file-content"
-         class="file-content"></div>
 </body>
 
 </html>
