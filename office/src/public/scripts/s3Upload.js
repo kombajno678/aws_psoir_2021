@@ -61116,12 +61116,15 @@ const ALLOWED_FOLDERS = [TODO_FOLDER_NAME, DONE_FOLDER_NAME]
 const ALLOWED_UPLOAD_FOLDERS = [TODO_FOLDER_NAME]
 const ALLOWED_UPLOAD_TYPE = "text/plain";
 const ALLOWED_UPLOAD_EXTENSION = ".txt";
+const DOWORK_BUTTON_ID = 'dowork-button';
 
 const defaultApiUrl = 'http://ec2-54-160-87-52.compute-1.amazonaws.com'
 var apiUrl = defaultApiUrl;
 
 const todoElementId = 'app-todo';
 const doneElementId = 'app-done';
+
+var msgs = [];
 
 const gets3file = (path) => {
   console.log('gets3file');
@@ -61132,7 +61135,7 @@ const gets3file = (path) => {
   xhr.send(JSON.stringify({
     path: path
   }));
-  document.getElementById('file-content').innerHTML = '...';
+  document.getElementById('file-content').innerHTML = '... loading ...';
   xhr.onload = function () {
     let data = JSON.parse(xhr.response);
 
@@ -61140,14 +61143,17 @@ const gets3file = (path) => {
     data.data.data.forEach(char => {
       string += String.fromCharCode(char);
     })
-    console.log(string);
-    document.getElementById('file-content').innerHTML = string;
+    //console.log(string);
+    let filename = path.split('/').pop();
+    document.getElementById('file-content').innerHTML = `<h4> ${filename} contents: </h4><p>${string}</p>`;
   }
 
 }
 window.gets3file = gets3file;
 
 const doWorkOnselectedFiles = () => {
+  document.getElementById(DOWORK_BUTTON_ID).disabled = true;
+  
   let allCheckboxes = document.querySelectorAll(".file-checkbox");
   let files = [];
 
@@ -61163,11 +61169,18 @@ const doWorkOnselectedFiles = () => {
   xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
   xhr.send(JSON.stringify(files));
   xhr.onload = function () {
-    let msg = `tasks sent: ${JSON.stringify(files)}`;
-    document.getElementById('log').innerHTML = msg + '<br>' + document.getElementById('log').innerHTML
+    let timestamp = new Date().toISOString();
+    let msg = `<div class="log-msg">${timestamp} > tasks sent: ${JSON.stringify(files)}</div>`;
+    msgs.push(msg);
+
+
+    document.getElementById('log').innerHTML = '<h4>Messages: </h4>' + msgs.reverse().join('<br>');
+    document.getElementById(DOWORK_BUTTON_ID).disabled = false;
   }
-
-
+  xhr.onerror = (error) => {
+    console.error(error);
+    document.getElementById(DOWORK_BUTTON_ID).disabled = false;
+  }
 
 }
 window.doWorkOnselectedFiles = doWorkOnselectedFiles;
@@ -61239,11 +61252,6 @@ const viewFolder = async (folderName) => {
   }
   const folderKey = encodeURIComponent(folderName) + "/";
   try {
-    let addFileForm =
-      `<input id="input-file-upload" type="file" accept=".txt">
-      <button id="addfile" onclick="addFile('${folderName}')">
-      Add file
-      </button>`;
     let allowedUpload = ALLOWED_UPLOAD_FOLDERS.find(f => f === folderName) ? true : false;
     const data = await s3.send(
       new _aws_sdk_client_s3__WEBPACK_IMPORTED_MODULE_2__["ListObjectsCommand"]({
@@ -61253,13 +61261,7 @@ const viewFolder = async (folderName) => {
     );
 
     if (data.Contents.length === 1) {
-      var htmlTemplate = [
-        "<p>No files :( </p>",
-        allowedUpload ? addFileForm : [],
-        // '<br><button onclick="listFolders()">',
-        // "Back to folders",
-        // "</button>",
-      ];
+      var htmlTemplate = ["<p>No files :( </p>"];
       document.getElementById(elementId).innerHTML = getHtml(htmlTemplate);
     } else {
       console.log(data);
@@ -61290,20 +61292,13 @@ const viewFolder = async (folderName) => {
         ]);
       });
       var message = files.length
-        ? `<button type="button" onclick="doWorkOnselectedFiles()"> do "work" on selected files </button>`
+        ? `<button type="button" id="${DOWORK_BUTTON_ID}" class="btn btn-success" onclick="doWorkOnselectedFiles()"> Do "work" on selected files </button>`
         : "<p>You don't have any files. You need to add files.</p>";
       const htmlTemplate = [
-        // "<h2>",
-        // "Folder: " + albumName,
-        // "</h2>",
         message,
         "<div>",
         getHtml(files),
-        "</div>",
-        allowedUpload ? addFileForm : [],
-        // '<br><button onclick="listFolders()">',
-        // "Back to folders",
-        // "</button>",
+        "</div>"
       ];
       document.getElementById(elementId).innerHTML = getHtml(htmlTemplate);
     }
@@ -61323,40 +61318,33 @@ const addFile = async (folderName) => {
   const files = document.getElementById("input-file-upload")['files'];
   try {
     const folderKey = encodeURIComponent(folderName) + "/";
-    // const data = await s3.send(
-    //   new ListObjectsCommand({
-    //     Prefix: folderKey,
-    //     Bucket: bucketName
-    //   })
-    // );
+
     const file = files[0];
-    console.log("form file : ");
-    console.log(file);
-    let extension = file.name.split('.').pop()
     if(!(file.type === ALLOWED_UPLOAD_TYPE)){
-      alert(`file type must be ${ALLOWED_UPLOAD_TYPE}`);
+      alert(`Not allowed file type.`);
       throw `file type must be ${ALLOWED_UPLOAD_TYPE}`;
     }
+    let extension = file.name.split('.').pop();
     if(!(extension !== ALLOWED_UPLOAD_EXTENSION)){
-      alert(`file extension must be ${ALLOWED_UPLOAD_EXTENSION}`);
+      alert(`Not allowed file extension`);
       throw `file extension must be ${ALLOWED_UPLOAD_EXTENSION}`;
     }
     
     const fileName = file.name;
-    const photoKey = folderKey + fileName;
-    // const uploadParams = {
-    //   Bucket: bucketName,
-    //   Key: photoKey,
-    //   Body: file
-    // };
-    // try {
-    //   const data = await s3.send(new PutObjectCommand(uploadParams));
-    //   alert("Successfully uploaded photo.");
-    //   viewFolder(folderName);
-    // } catch (err) {
-    //   console.error(err.message);
-    //   return alert("There was an error uploading your file: " + err.message);
-    // }
+    const fileKey = folderKey + fileName;
+    const uploadParams = {
+      Bucket: bucketName,
+      Key: fileKey,
+      Body: file
+    };
+    try {
+      const data = await s3.send(new _aws_sdk_client_s3__WEBPACK_IMPORTED_MODULE_2__["PutObjectCommand"](uploadParams));
+      alert("Successfully uploaded photo.");
+      viewFolder(folderName);
+    } catch (err) {
+      console.error(err.message);
+      return alert("There was an error uploading your file: " + err.message);
+    }
   } catch (err) {
     if (!files.length) {
       return alert("Choose a file to upload first.");
