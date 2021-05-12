@@ -19,10 +19,11 @@ const doneElementId = 'app-done';
 var msgs = [];
 
 const gets3file = (path) => {
-  console.log('gets3file');
+  let url = apiUrl + '/gets3file';
+  console.log('gets3file', url);
 
   let xhr = new XMLHttpRequest();
-  xhr.open('POST', apiUrl + '/gets3file');
+  xhr.open('POST', url);
   xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
   xhr.send(JSON.stringify({
     path: path
@@ -43,16 +44,18 @@ const gets3file = (path) => {
 }
 window.gets3file = gets3file;
 
-function pushMsg(string){
+function pushMsg(string) {
   let timestamp = new Date().toISOString();
-    let msg = `<div class="log-msg">${timestamp} > ${string}</div>`;
-    msgs.reverse();
-    msgs.push(msg);
-    msgs.reverse();
-    document.getElementById('log').innerHTML = '<h4>Messages: </h4>' + msgs.join('<br>');
+  let msg = `<div class="log-msg">${timestamp} > ${string}</div>`;
+  msgs.reverse();
+  msgs.push(msg);
+  msgs.reverse();
+  document.getElementById('log').innerHTML = '<h4>Messages: </h4>' + msgs.join('<br>');
 }
 
 const doWorkOnselectedFiles = () => {
+  let url = apiUrl + '/tasks';
+  console.log("tasks", url);
   document.getElementById(DOWORK_BUTTON_ID).disabled = true;
 
   let allCheckboxes = document.querySelectorAll(".file-checkbox");
@@ -64,20 +67,26 @@ const doWorkOnselectedFiles = () => {
     }
   })
   //console.log(files);
+  if (files.length > 0) {
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+    xhr.send(JSON.stringify(files));
+    xhr.onload = function () {
+      pushMsg(`tasks sent: ${JSON.stringify(files)}`);
+      document.getElementById(DOWORK_BUTTON_ID).disabled = false;
+    }
+    xhr.onerror = (error) => {
+      console.error(error);
+      pushMsg(`failed to send tasks`);
+      document.getElementById(DOWORK_BUTTON_ID).disabled = false;
+    }
+  } else {
+    alert('No files selected');
+    document.getElementById(DOWORK_BUTTON_ID).disabled = false;
+  }
 
-  let xhr = new XMLHttpRequest();
-  xhr.open('POST', apiUrl + '/tasks');
-  xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-  xhr.send(JSON.stringify(files));
-  xhr.onload = function () {
-    pushMsg(`tasks sent: ${JSON.stringify(files)}`);
-    document.getElementById(DOWORK_BUTTON_ID).disabled = false;
-  }
-  xhr.onerror = (error) => {
-    console.error(error);
-    pushMsg(`failed to send tasks`);
-    document.getElementById(DOWORK_BUTTON_ID).disabled = false;
-  }
+
 
 }
 window.doWorkOnselectedFiles = doWorkOnselectedFiles;
@@ -89,8 +98,15 @@ import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity";
 
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity";
 
-import { S3Client, PutObjectCommand, ListObjectsCommand, DeleteObjectCommand, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, ListObjectsCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
+
+function setApiUrl(newUrl) {
+  apiUrl = newUrl;
+  localStorage.setItem('aws-office-api-url', apiUrl);
+  document.getElementById('api-form')['value'] = apiUrl;
+  console.log('apiUrl updated, ', apiUrl);
+}
 window.addEventListener('load', (event) => {
 
   let stored = localStorage.getItem('aws-office-api-url');
@@ -101,20 +117,19 @@ window.addEventListener('load', (event) => {
   document.getElementById('api-form')['value'] = apiUrl;
 
   document.getElementById('api-form').onkeyup = () => {
-    apiUrl = document.getElementById('api-form')['value'];
-    localStorage.setItem('aws-office-api-url', apiUrl);
-    console.log('apiUrl updated, ', apiUrl);
+    setApiUrl(document.getElementById('api-form')['value']);
+  }
+  document.getElementById('api-form').onblur = () => {
+    setApiUrl(document.getElementById('api-form')['value']);
   }
 
+
+
   document.getElementById('api-url-default').onclick = () => {
-    apiUrl = defaultApiUrl;
-    localStorage.setItem('aws-office-api-url', apiUrl);
-    document.getElementById('api-form')['value'] = apiUrl;
+    setApiUrl(defaultApiUrl);
   }
   document.getElementById('api-url-clear').onclick = () => {
-    apiUrl = '';
-    localStorage.setItem('aws-office-api-url', apiUrl);
-    document.getElementById('api-form')['value'] = apiUrl;
+    setApiUrl('');
   }
 });
 
@@ -167,35 +182,27 @@ const viewFolder = async (folderName) => {
       const files = data.Contents.filter(x => x.Key !== folderName + '/').map(function (file) {
         const fileKey = file.Key;
         const fileUrl = bucketUrl + encodeURIComponent(fileKey);
+        /*
+        <li class="list-group-item">Cras justo odio</li>
+        */
         return getHtml([
-          "<span>",
-          // "<div>",
-          //   '<img style="width:128px;height:128px;" src="' + photoUrl + '"/>',
-          // "</div>",
-          "<div>",
-          "<span onclick=\"deletePhoto('" +
-          folderName +
-          "','" +
-          fileKey +
-          "')\">",
-          "X",
-          "</span>",
-          `<input type="checkbox" class="file-checkbox" id="checkbox_${fileKey}" value="${fileKey}" >`,
-          `<span><a href="#" onclick="gets3file('${fileKey}')">`,
-          fileKey.replace(folderKey, ""),
-          "</a></span>",
+          "<li class=\"list-group-item\">",
+          '<div class="row w-100 m-0">',
+          `<div class="col-auto p-1"><button class="btn p-0 deletefile-button" onclick="deleteFile('${folderName}','${fileKey}')"></button></div>`,
+          `<div class="col-auto p-1"><input type="checkbox" class="form-check-input file-checkbox" id="checkbox_${fileKey}" value="${fileKey}" ></div>`,
+          `<div class="col p-1"><a href="#" onclick="gets3file('${fileKey}')">${fileKey.replace(folderKey, "")}</a></div>`,
           "</div>",
-          "</span>",
+          "</li>",
         ]);
       });
       var message = files.length
-        ? `<button type="button" id="${DOWORK_BUTTON_ID}" class="btn btn-success" onclick="doWorkOnselectedFiles()"> Do "work" on selected files </button>`
+        ? `<button type="button" id="${DOWORK_BUTTON_ID}" class="btn btn-success w-100" onclick="doWorkOnselectedFiles()"> Do "work" on selected files </button>`
         : "<p>You don't have any files. You need to add files.</p>";
       const htmlTemplate = [
-        message,
-        "<div>",
+        `${message}`,
+        "<ul class=\"list-group\">",
         getHtml(files),
-        "</div>"
+        "</ul>"
       ];
       document.getElementById(elementId).innerHTML = getHtml(htmlTemplate);
     }
@@ -254,14 +261,17 @@ window.addFile = addFile;
 
 // Delete a photo from an album
 const deleteFile = async (folderName, fileKey) => {
-  try {
-    const params = { Key: fileKey, Bucket: bucketName };
-    const data = await s3.send(new DeleteObjectCommand(params));
-    console.log(`deleted file : '${fileKey}'`);
-    viewFolder(folderName);
-  } catch (err) {
-    return alert(`error while deleting file : '${fileKey}'`, err.message);
+  if (confirm(`Deleting file '${fileKey}'. Are you sure?`)) {
+    try {
+      const params = { Key: fileKey, Bucket: bucketName };
+      const data = await s3.send(new DeleteObjectCommand(params));
+      console.log(`deleted file : '${fileKey}'`);
+      viewFolder(folderName);
+    } catch (err) {
+      return alert(`error while deleting file : '${fileKey}'`, err.message);
+    }
   }
+
 };
 // Make deletePhoto function available to the browser
 window.deleteFile = deleteFile;

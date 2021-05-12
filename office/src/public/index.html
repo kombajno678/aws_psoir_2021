@@ -1,61 +1,102 @@
+<!DOCTYPE html>
 <html>
 
 <head>
-    <title>psoir office</title>
+    <script src="./scripts/main.js"></script>
+    <script>
+        function getHtml(template) {
+            return template.join("\n");
+        }
+        viewFolder('todo');
+        viewFolder('done');
 
+
+
+    </script>
+    <script src="bootstrap-5.0.0-dist/js/bootstrap.bundle.min.js">
+    </script>
     <style>
-        .files {
-            width: 100%;
-            border: 1px solid red
+        .deletefile-button:hover::after {
+            content: "❌";
+
         }
 
-        .file-row {
-            width: 100%;
-            border: 1px solid black
+        .deletefile-button::after {
+            content: "✖";
         }
     </style>
-
-    <script src="scripts/main.js"></script>
+    <link rel="stylesheet"
+          type="text/css"
+          href="bootstrap-5.0.0-dist/css/bootstrap.min.css">
 </head>
 
-<body>
-
-    <h3>s3 files list: </h3>
-    <button type="button"
-            onclick="doWorkOnselectedFiles()">
-        do "work" on selected files
-    </button>
-    <button type="button"
-            onclick="reloadList()">
-        refresh
-    </button>
-    <input type="text" id="api-form" name="api-url">
-    <div id="s3-files"
-         class="files">
-        <div class="file-row">
-            <input type="checkbox"> example
+<body class="container">
+    <div class="row">
+        <div class="col">
+            <h1>S3 files</h1>
         </div>
-        <div class="file-row">
-            <input type="checkbox"> example
-        </div>
-        <div class="file-row">
-            <input type="checkbox"> example
-        </div>
-        <div class="file-row">
-            <input type="checkbox"> example
-        </div>
-        <div class="file-row">
-            <input type="checkbox"> example
-        </div>
-
     </div>
-    <div id="log"
-         class="log"></div>
+    <div class="row">
+        <div class="col p-3">
+            api url:
+            <input type="text"
+                   id="api-form"
+                   name="api-url">
+            <button class="btn btn btn-outline-dark btn-sm"
+                    id="api-url-default">default</button>
+            <button class="btn btn btn-outline-dark btn-sm"
+                    id="api-url-clear">clear</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col p-3">
+            <span class="border">
+                <input id="input-file-upload"
+                       type="file"
+                       accept=".txt">
+            </span>
 
-         <div id="file-content" class="file-content"></div>
+            <button id="addfile"
+                    class="btn btn-primary btn-sm"
+                    onclick="addFile(null)">
+                Upload file
+            </button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>Todo</h2>
+            <div id="app-todo">
+                ... loading ...
+            </div>
+        </div>
+        <div class="col">
+            <h2>Done</h2>
+            <div id="app-done">
+                ... loading ...
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col p-3">
+            <div id="file-content"
+                 class="file-content"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col p-3">
+            <div id="log"
+                 class="log">
 
-    
-    
+            </div>
+
+
+        </div>
+    </div>
+
+
+
+
 </body>
 
 </html>
