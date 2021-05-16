@@ -183,6 +183,13 @@ const viewFolder = async (folderName) => {
     folderName = TODO_FOLDER_NAME;
   }
   let elementId = folderName == TODO_FOLDER_NAME ? todoElementId : doneElementId;
+
+  if (document.getElementById(elementId)) {
+    document.getElementById(elementId).innerHTML = '<div class="loading-box"></div>';
+
+  }
+
+
   if (!ALLOWED_FOLDERS.find(s => s === folderName)) {
     console.error(`folder ${folderName} is not allowed`);
     throw `folder ${folderName} is not allowed`;
@@ -214,7 +221,11 @@ const viewFolder = async (folderName) => {
           "<li class=\"list-group-item\">",
           '<div class="row w-100 m-0">',
           `<div class="col-auto p-1"><button class="btn p-0 deletefile-button" onclick="deleteFile('${folderName}','${fileKey}')"></button></div>`,
-          `<div class="col-auto p-1"><input type="checkbox" class="form-check-input file-checkbox" id="checkbox_${fileKey}" value="${fileKey}" ></div>`,
+
+          `${folderName == TODO_FOLDER_NAME ? `
+          <div class="col-auto p-1"><input type="checkbox" class="form-check-input file-checkbox" id="checkbox_${fileKey}" value="${fileKey}" ></div>
+          ` : ''}
+          `,
           `<div class="col p-1"><a href="#" onclick="gets3file('${fileKey}')">${fileKey.replace(folderKey, "")}</a></div>`,
           "</div>",
           "</li>",
@@ -226,7 +237,7 @@ const viewFolder = async (folderName) => {
       const htmlTemplate = [
         "<ul class=\"list-group\">",
         getHtml(files),
-        `${message}`,
+        `${folderName == TODO_FOLDER_NAME ? message : ''}`,
         "</ul>"
       ];
       document.getElementById(elementId).innerHTML = getHtml(htmlTemplate);
@@ -268,7 +279,7 @@ const addFile = async (folderName) => {
     };
     try {
       const data = await s3.send(new PutObjectCommand(uploadParams));
-      alert("Successfully uploaded photo.");
+      //alert("Successfully uploaded file.");
       viewFolder(folderName);
     } catch (err) {
       console.error(err.message);

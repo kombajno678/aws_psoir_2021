@@ -106,6 +106,55 @@
         .hide {
             display: none;
         }
+
+        .loading-box {}
+
+
+        .loading-box,
+        .loading-box:after {
+            border-radius: 50%;
+            width: 10em;
+            height: 10em;
+        }
+
+        .loading-box {
+            margin: 60px auto;
+            font-size: 10px;
+            position: relative;
+            border-top: 1.1em solid rgb(189 0 251);
+            border-right: 1.1em solid rgb(255 0 24 / 0%);
+            border-bottom: 1.1em solid rgb(14 207 251);
+            border-left: 1.1em solid #00000000;
+            -webkit-transform: translateZ(0);
+            -ms-transform: translateZ(0);
+            transform: translateZ(0);
+            -webkit-animation: load8 1.1s infinite linear;
+            animation: load8 1.1s infinite linear;
+        }
+
+        @-webkit-keyframes load8 {
+            0% {
+                -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes load8 {
+            0% {
+                -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
     </style>
     <link rel="stylesheet"
           type="text/css"
@@ -132,7 +181,17 @@
         </div>
         <div class="col-12 col-md-6 p-0 mb-3">
             <div class="material-shadow m-2 p-3 h-100">
-                <h3>Todo</h3>
+                <div class="row">
+                    <div class="col">
+                        <h3>Todo</h3>
+                    </div>
+                    <div class="col-auto">
+                        <button onclick="viewFolder('todo')"
+                                class="btn btn btn-outline-dark btn-sm">refresh</button>
+
+                    </div>
+                </div>
+
                 <div class="upload-form">
                     <span class="border">
                         <input id="input-file-upload"
@@ -152,7 +211,9 @@
 
                 <br>
                 <div id="app-todo">
-                    ... loading ...
+
+                    <div class="loading-box"></div>
+
                 </div>
             </div>
 
@@ -161,9 +222,24 @@
         <div class="col-12 col-md-6 p-0 mb-3">
 
             <div class="material-shadow m-2 p-3 h-100">
-                <h3>Done</h3>
+
+
+                <div class="row">
+                    <div class="col">
+                        <h3>Done</h3>
+                    </div>
+                    <div class="col-auto">
+                        <button onclick="viewFolder('done')"
+                                class="btn btn btn-outline-dark btn-sm">refresh</button>
+
+                    </div>
+                </div>
+
+
                 <div id="app-done">
-                    ... loading ...
+
+                    <div class="loading-box"></div>
+
                 </div>
             </div>
 
