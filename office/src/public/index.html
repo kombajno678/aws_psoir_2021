@@ -2,6 +2,9 @@
 <html>
 
 <head>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
     <script src="./scripts/main.js"></script>
     <script>
         function getHtml(template) {
@@ -24,73 +27,174 @@
         .deletefile-button::after {
             content: "✖";
         }
+
+        .upload-form {
+            text-align: center;
+        }
+
+
+        .cool-btn.cool-green {
+            background: -webkit-linear-gradient(right, #31f5ff, #d83bff);
+            color: white;
+        }
+
+        .cool-btn.cool-green:hover {
+            box-shadow: 0px 1px 18px #0089ff8c;
+        }
+
+        .cool-btn.cool-purple {
+            background: -webkit-linear-gradient(right, #ffe000, #ff0099);
+            color: white;
+        }
+
+        .cool-btn.cool-purple:hover {
+            box-shadow: 0px 1px 18px #ffbc0094;
+        }
+
+
+
+
+        .cool-btn {
+
+            border: none;
+            border-radius: 20px;
+
+            cursor: pointer;
+
+            margin: 1rem auto;
+
+            transition: 0.25s;
+            padding: 0 3rem;
+            font-weight: 600;
+            min-width: 310px;
+            height: 3rem;
+        }
+
+        .file-error {
+            color: red;
+            background-color: #ff00002e;
+            display: block !important;
+        }
+
+        .file-good {
+            background-color: #0099ff2e;
+            display: block !important;
+        }
+
+        .file-lodaing {
+            background-color: #2e2e2e12;
+            display: block !important;
+            opacity: 0.5;
+        }
+
+        .file-content {
+            padding: 1rem;
+            overflow: auto;
+            display: none;
+
+        }
+
+        .list-group-item.selected {
+            background-color: rgba(0, 153, 255, 0.39);
+        }
+
+        .material-shadow {
+            border-radius: 15px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23) !important
+        }
+
+        .hide {
+            display: none;
+        }
     </style>
     <link rel="stylesheet"
           type="text/css"
           href="bootstrap-5.0.0-dist/css/bootstrap.min.css">
 </head>
 
-<body class="container">
+<body class="container-lg">
     <div class="row">
-        <div class="col">
-            <h1>S3 files</h1>
+        <div class="col-12 col-md-6">
+            <div class="col p-1">
+                <h1>S3 files</h1>
+            </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col p-3">
+        <div class="col-12 col-md-6 ">
             api url:
             <input type="text"
                    id="api-form"
-                   name="api-url">
+                   name="api-url"
+                   placeholder="localhost">
             <button class="btn btn btn-outline-dark btn-sm"
                     id="api-url-default">default</button>
             <button class="btn btn btn-outline-dark btn-sm"
                     id="api-url-clear">clear</button>
         </div>
-    </div>
-    <div class="row">
-        <div class="col p-3">
-            <span class="border">
-                <input id="input-file-upload"
-                       type="file"
-                       accept=".txt">
-            </span>
+        <div class="col-12 col-md-6 p-0 mb-3">
+            <div class="material-shadow m-2 p-3 h-100">
+                <h3>Todo</h3>
+                <div class="upload-form">
+                    <span class="border">
+                        <input id="input-file-upload"
+                               type="file"
+                               accept=".txt">
+                    </span>
+                    <br>
+                    <button id="addfile"
+                            class="cool-btn cool-green"
+                            onclick="addFile(null)">
+                        Upload file
+                    </button>
 
-            <button id="addfile"
-                    class="btn btn-primary btn-sm"
-                    onclick="addFile(null)">
-                Upload file
-            </button>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            <h2>Todo</h2>
-            <div id="app-todo">
-                ... loading ...
+                </div>
+
+
+
+                <br>
+                <div id="app-todo">
+                    ... loading ...
+                </div>
             </div>
+
+
         </div>
-        <div class="col">
-            <h2>Done</h2>
-            <div id="app-done">
-                ... loading ...
+        <div class="col-12 col-md-6 p-0 mb-3">
+
+            <div class="material-shadow m-2 p-3 h-100">
+                <h3>Done</h3>
+                <div id="app-done">
+                    ... loading ...
+                </div>
             </div>
+
+
+
         </div>
+
+
+
+
+
+
+
+
+
+
+
     </div>
+
+
     <div class="row">
-        <div class="col p-3">
+        <div class="col p-2">
             <div id="file-content"
-                 class="file-content"></div>
+                 class="file-content material-shadow"></div>
         </div>
     </div>
     <div class="row">
-        <div class="col p-3">
+        <div class="col p-2">
             <div id="log"
-                 class="log">
-
+                 class="log material-shadow p-3 hide ">
             </div>
-
-
         </div>
     </div>
 

@@ -10,7 +10,9 @@ const ALLOWED_UPLOAD_TYPE = "text/plain";
 const ALLOWED_UPLOAD_EXTENSION = ".txt";
 const DOWORK_BUTTON_ID = 'dowork-button';
 
-const defaultApiUrl = 'http://ec2-54-160-87-52.compute-1.amazonaws.com'
+//const defaultApiUrl = 'http://ec2-54-160-87-52.compute-1.amazonaws.com'
+//const defaultApiUrl = 'http://ec2-54-160-87-52.compute-1.amazonaws.com'
+const defaultApiUrl = window.location.href;
 var apiUrl = defaultApiUrl;
 
 const todoElementId = 'app-todo';
@@ -19,8 +21,10 @@ const doneElementId = 'app-done';
 var msgs = [];
 
 const gets3file = (path) => {
-  let url = apiUrl + '/gets3file';
+  let url = apiUrl + 'gets3file';
   console.log('gets3file', url);
+
+  let filename = path.split('/').pop();
 
   let xhr = new XMLHttpRequest();
   xhr.open('POST', url);
@@ -28,18 +32,38 @@ const gets3file = (path) => {
   xhr.send(JSON.stringify({
     path: path
   }));
+  document.getElementById('file-content').setAttribute('class', 'file-content file-lodaing material-shadow');
   document.getElementById('file-content').innerHTML = '... loading ...';
-  xhr.onload = function () {
-    let data = JSON.parse(xhr.response);
-
+  xhr.onload = () => {
+    console.log('onload', xhr.status);
+    let response = JSON.parse(xhr.response);
     let string = '';
-    data.data.data.forEach(char => {
-      string += String.fromCharCode(char);
-    })
-    //console.log(string);
-    let filename = path.split('/').pop();
+    if (xhr.status == 200) {
+      response.data.data.forEach(char => {
+        string += String.fromCharCode(char);
+      })
+      document.getElementById('file-content').setAttribute('class', 'file-content file-good material-shadow');
+    } else {
+      console.error(response.err);
+      string = `error getting file contents<br> ${response.err.message} [${response.err.code}]`;
+      document.getElementById('file-content').setAttribute('class', 'file-content file-error material-shadow');
+    }
+
     document.getElementById('file-content').innerHTML = `<h4> ${filename} contents: </h4><p>${string}</p>`;
+
+
   }
+  xhr.onerror = (err) => {
+    console.log('onerror', xhr.status);
+    console.error(err);
+    let response = JSON.parse(xhr.response);
+    console.error(response.err);
+    let string = `error getting file contents<br> ${response.err.message} [${response.err.code}]`;
+    document.getElementById('file-content').setAttribute('class', 'file-content file-error');
+    document.getElementById('file-content').innerHTML = `<h4> ${filename} contents: </h4><p>${string}</p>`;
+
+  }
+
 
 }
 window.gets3file = gets3file;
@@ -50,13 +74,14 @@ function pushMsg(string) {
   msgs.reverse();
   msgs.push(msg);
   msgs.reverse();
+  document.getElementById('log').setAttribute('class', 'log material-shadow p-3');
   document.getElementById('log').innerHTML = '<h4>Messages: </h4>' + msgs.join('<br>');
 }
 
 const doWorkOnselectedFiles = () => {
-  let url = apiUrl + '/tasks';
+  let url = apiUrl + 'tasks';
   console.log("tasks", url);
-  document.getElementById(DOWORK_BUTTON_ID).disabled = true;
+  document.getElementById(DOWORK_BUTTON_ID)['disabled'] = true;
 
   let allCheckboxes = document.querySelectorAll(".file-checkbox");
   let files = [];
@@ -196,12 +221,12 @@ const viewFolder = async (folderName) => {
         ]);
       });
       var message = files.length
-        ? `<button type="button" id="${DOWORK_BUTTON_ID}" class="btn btn-success w-100" onclick="doWorkOnselectedFiles()"> Do "work" on selected files </button>`
+        ? `<button type="button" id="${DOWORK_BUTTON_ID}" class="cool-btn cool-purple" onclick="doWorkOnselectedFiles()"> Do "work" on selected files </button>`
         : "<p>You don't have any files. You need to add files.</p>";
       const htmlTemplate = [
-        `${message}`,
         "<ul class=\"list-group\">",
         getHtml(files),
+        `${message}`,
         "</ul>"
       ];
       document.getElementById(elementId).innerHTML = getHtml(htmlTemplate);
