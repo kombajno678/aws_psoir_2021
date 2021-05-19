@@ -12,7 +12,7 @@ const DOWORK_BUTTON_ID = 'dowork-button';
 
 //const defaultApiUrl = 'http://ec2-54-160-87-52.compute-1.amazonaws.com'
 //const defaultApiUrl = 'http://ec2-54-160-87-52.compute-1.amazonaws.com'
-const defaultApiUrl = window.location.href;
+const defaultApiUrl = (window.location.href[window.location.href.length-1] == '#') ? window.location.href.substring(0, window.location.href.length-1) : window.location.href;
 var apiUrl = defaultApiUrl;
 
 const todoElementId = 'app-todo';
