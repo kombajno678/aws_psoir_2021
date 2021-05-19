@@ -28,6 +28,7 @@ class SuperWorker(threading.Thread):
         threading.Thread.__init__(self)
         self.taskPath = taskPath
         self.message = message
+        self.running = True
         
         
     def doStuff(self, strings) -> str:
@@ -57,44 +58,54 @@ thank you, that's all, bye, come again <br/>
 
         
     def run(self):
+        self.running = True
         print(f"worker => brr starting work on {self.taskPath}")
         
         # Download an S3 object
+        print(f"downloading s3 object...")
         s3 = boto3.client('s3')
-        
         s3Filepath = self.taskPath # "todo/0001.txt"
+        print(f"s3Filepath = {s3Filepath}")
         
         
         filename = os.path.basename(s3Filepath)
+        print(f"filename = {filename}")
         tmpFilePath = "temp_" + filename
+        print(f"tmpFilePath = {tmpFilePath}")
         
-        with open(tmpFilePath, 'wb') as f:
-            s3.download_fileobj(BUCKET_NAME, s3Filepath, f)
+        with open(tmpFilePath, 'wb') as f1:
+            print(f"s3.download_fileobj({BUCKET_NAME}, {s3Filepath}, {f1})")
+            s3.download_fileobj(BUCKET_NAME, s3Filepath, f1)
         
-        content = None
-        with open(tmpFilePath, 'r') as f:
-            content = f.readlines()
-            
-        msg = self.doStuff(content)
-        
-        with open(tmpFilePath, 'w') as f:
-            f.write(msg)
-        # Upload the file
-        doneFilePath = "done/" + filename
-        try:
-            response = s3.upload_file(tmpFilePath, BUCKET_NAME, doneFilePath)
-        except ClientError as e:
-            print(e)
+            content = None
+            with open(tmpFilePath, 'r') as f2:
+                print(f"content = f.readlines()")
+                content = f2.readlines()
+                
+                print(f"msg = self.doStuff(content)")
+                msg = self.doStuff(content)
+                
+                with open(tmpFilePath, 'w') as f3:
+                    print(f"f.write(msg)")
+                    f3.write(msg)
+                    # Upload the file
+                    doneFilePath = "done/" + filename
+                    try:
+                        print(f"s3.upload_file({tmpFilePath}, {BUCKET_NAME}, {doneFilePath})")
+                        response = s3.upload_file(tmpFilePath, BUCKET_NAME, doneFilePath)
+                    except ClientError as e:
+                        print(e)
 
-        print(f"worker => work done on  {self.taskPath}")
-        # self.message.delete()
+                    print(f"worker => work done on  {self.taskPath}")
+                    self.message.delete()
+        self.running = False
         
 
 class QueueListenerThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.running: bool = True
-        self.delay: float = 10.0
+        self.delay: float = 5.0
         
         self.sqs = boto3.resource('sqs', region_name=REGION)
         # Get the queue. This returns an SQS.Queue instance
@@ -116,13 +127,16 @@ class QueueListenerThread(threading.Thread):
                 # Print out the body and author (if set)
                 print('henlo, this is msg, body:{0}; tasktype:{1}'.format(message.body, taskType))
                 print('spawning worker thread')
-                wokrer = SuperWorker(message.body, message)
-                wokrer.start()
+                worker = SuperWorker(message.body, message)
+                worker.start()
+                while worker.running :
+                    print("waiting for worker to finish")
+                    time.sleep(1)
                 
                 # Let the queue know that the message is processed
-                message.delete()
+                # message.delete()
                 
-            time.sleep(self.delay)
+            #time.sleep(self.delay)
             
         
 if (__name__ == "__main__"):

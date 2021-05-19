@@ -127,7 +127,7 @@ function prepareMsgForBatch(fileName) {
     return params;
 }
 
-function sendMsgs(manyParams) {
+function sendMsgs(manyParams, res) {
 
     let sqs = new AWS.SQS({
         apiVersion: '2012-11-05'
@@ -140,7 +140,7 @@ function sendMsgs(manyParams) {
 
     //invoke self for rest
     if (manyParams.length > 0) {
-        sendMsgs(manyParams);
+        sendMsgs(manyParams, res);
     }
     //send batch
 
@@ -156,8 +156,28 @@ function sendMsgs(manyParams) {
     sqs.sendMessageBatch(params, function (err, data) {
         if (err) {
             console.error("Error", err);
+            try {
+                res.status(500).send({
+                    error: err
+                });
+
+            } catch (error) {
+                console.error(error)
+            }
         } else {
             console.log("msg batch  sent, success:", data.Successful.length, " failed: ", data.Failed.length);
+
+
+            try {
+                res.send({
+                    success: data.Successful.length,
+                    failed: data.Failed.length
+                });
+
+            } catch (error) {
+                console.error(error)
+            }
+
         }
     });
 
@@ -245,9 +265,9 @@ app.post("/tasks", (req, res) => {
         let files = req.body;
         console.log(files);
         let msgs = files.map(prepareMsgForBatch);
-        sendMsgs(msgs);
+        sendMsgs(msgs, res);
 
-        res.send(`i guess all ${msgs.length} msgs have been sent, but not sure`);
+        //res.send(`i guess all ${msgs.length} msgs have been sent, but not sure`);
     } catch {
         res.status(500).send({});
     }
