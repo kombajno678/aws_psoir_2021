@@ -31,21 +31,27 @@ class SuperWorker(threading.Thread):
         
         
     def doStuff(self, strings) -> str:
-        randomLine = random.randint(0, len(strings))
-        randomCharactersStart = random.randint(0, len(strings[randomLine]))
-        randomCharactersEnd = random.randint(randomCharactersStart, len(strings[randomLine]))
+        randomLine1 = random.randint(0, len(strings))
+        randomLine2 = random.randint(0, len(strings))
+        randomLine3 = random.randint(0, len(strings))
+        randomLine4 = random.randint(0, len(strings))
+        randomLine5 = random.randint(0, len(strings))
         
         msg = f'''
-<h1>hello 🎈 <h1>, <b>aws<b> worker 🛠  has been here and left this message <br/>
+<h1>hello <h1>, <b>aws<b> worker has been here and left this message <br/>
 current datetime is: {datetime.datetime.now().isoformat()}<br/>
-random number goes here: {random.randint(420, 2137)}<br/>
+random number here: {random.randint(420, 2137)}<br/>
 <br/>
 <hr/>
 <br/>
 this file had {len(strings)} lines of text<br/>
-i have choosen random line {randomLine}, and characters from index {randomCharactersStart} to {randomCharactersEnd}, here they are:<br/><br/>
-{strings[randomLine][randomCharactersStart:randomCharactersEnd]}<br/><br/>
-thank you, that's all, bye, come again ♥<br/>
+i have choosen random lines: {randomLine1}, {randomLine2}, {randomLine3}, {randomLine4}, {randomLine5}, here they are:<br/><br/>
+{strings[randomLine1]}<br/><br/>
+{strings[randomLine2]}<br/><br/>
+{strings[randomLine3]}<br/><br/>
+{strings[randomLine4]}<br/><br/>
+{strings[randomLine5]}<br/><br/>
+thank you, that's all, bye, come again <br/>
 '''
         return msg
 
