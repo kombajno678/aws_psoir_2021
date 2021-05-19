@@ -129,12 +129,11 @@ class QueueListenerThread(threading.Thread):
                 print('spawning worker thread')
                 worker = SuperWorker(message.body, message)
                 worker.start()
-                while worker.running :
-                    print("waiting for worker to finish")
-                    time.sleep(1)
+                # while worker.running :
+                #     print("waiting for worker to finish")
+                #     time.sleep(1)
                 
-                # Let the queue know that the message is processed
-                # message.delete()
+                
                 
             #time.sleep(self.delay)
             
@@ -142,6 +141,8 @@ class QueueListenerThread(threading.Thread):
 if (__name__ == "__main__"):
     thread = QueueListenerThread()
     thread.start()
+    while(thread.running):
+        time.sleep(10)
 
 
 
