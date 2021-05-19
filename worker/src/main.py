@@ -139,10 +139,14 @@ class QueueListenerThread(threading.Thread):
             
         
 if (__name__ == "__main__"):
-    thread = QueueListenerThread()
-    thread.start()
-    while(thread.running):
-        time.sleep(10)
+    while True:
+        try:
+            thread = QueueListenerThread()
+            thread.start()
+            while(thread.running):
+                time.sleep(1)
+        except Exception as err:
+            print(err)
 
 
 
