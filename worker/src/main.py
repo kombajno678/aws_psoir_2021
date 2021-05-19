@@ -38,7 +38,7 @@ class SuperWorker(threading.Thread):
         randomLine5 = random.randint(0, len(strings))
         
         msg = f'''
-<h1>hello <h1>, <b>aws<b> worker has been here and left this message <br/>
+<h1>hello </h1>, <b>aws</b> worker has been here and left this message <br/>
 current datetime is: {datetime.datetime.now().isoformat()}<br/>
 random number here: {random.randint(420, 2137)}<br/>
 <br/>
