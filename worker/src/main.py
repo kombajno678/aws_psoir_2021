@@ -77,27 +77,27 @@ thank you, that's all, bye, come again <br/>
             print(f"s3.download_fileobj({BUCKET_NAME}, {s3Filepath}, {f1})")
             s3.download_fileobj(BUCKET_NAME, s3Filepath, f1)
         
-            content = None
-            with open(tmpFilePath, 'r') as f2:
-                print(f"content = f.readlines()")
-                content = f2.readlines()
-                
-                print(f"msg = self.doStuff(content)")
-                msg = self.doStuff(content)
-                
-                with open(tmpFilePath, 'w') as f3:
-                    print(f"f.write(msg)")
-                    f3.write(msg)
-                    # Upload the file
-                    doneFilePath = "done/" + filename
-                    try:
-                        print(f"s3.upload_file({tmpFilePath}, {BUCKET_NAME}, {doneFilePath})")
-                        response = s3.upload_file(tmpFilePath, BUCKET_NAME, doneFilePath)
-                    except ClientError as e:
-                        print(e)
+        content = None
+        with open(tmpFilePath, 'r') as f2:
+            print(f"content = f.readlines()")
+            content = f2.readlines()
+            
+        print(f"msg = self.doStuff(content)")
+        msg = self.doStuff(content)
+        
+        with open(tmpFilePath, 'w') as f3:
+            print(f"f.write(msg)")
+            f3.write(msg)
+        # Upload the file
+        doneFilePath = "done/" + filename
+        try:
+            print(f"s3.upload_file({tmpFilePath}, {BUCKET_NAME}, {doneFilePath})")
+            response = s3.upload_file(tmpFilePath, BUCKET_NAME, doneFilePath)
+        except ClientError as e:
+            print(e)
 
-                    print(f"worker => work done on  {self.taskPath}")
-                    self.message.delete()
+        print(f"worker => work done on  {self.taskPath}")
+        self.message.delete()
         self.running = False
         
 
